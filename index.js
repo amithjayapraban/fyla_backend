@@ -25,18 +25,19 @@ wsServer.on("request", (req) => {
   const splitted = path.split("/");
   splitted.shift();
   const id = splitted[0];
+  const device = splitted[1];
   const conn = req.accept(null, req.origin);
   conn.on("message", (data) => {
     if (data.type === "utf8") {
-      console.log(`Client ${id} << ${data.utf8Data}`);
+      console.log(`from ${id} << ${data.utf8Data}`);
 
       const message = JSON.parse(data.utf8Data);
       const destId = message.id;
       const dest = clients[destId];
       if (dest) {
-        message.id = id;
+        message.id = `${id}%${device}`;
         const data = JSON.stringify(message);
-        console.log(`Client ${destId} >> ${data}`);
+        console.log(`sending to ${destId} >> ${data}`);
         dest.send(data);
       } else {
         console.error(`Client ${destId} not found`);
@@ -44,22 +45,22 @@ wsServer.on("request", (req) => {
     }
   });
   conn.on("close", () => {
-    delete clients[id];
+    delete clients[`${id}%${device}`]; 
     console.error(`Client ${id} disconnected`);
   });
 
-  clients[id] = conn;
+  clients[`${id}%${device}`] = conn;
   let keys = Object.keys(clients);
   Object.values(clients).forEach((i) => {
     i.send(JSON.stringify({ type: "peers", keys }));
   });
 });
 
-const endpoint = process.env.PORT || "8080";
+const endpoint = process.env.PORT || "8000";
 const splitted = endpoint.split(":");
 const port = splitted.pop();
-const hostname = splitted.join(":") || "127.0.0.1";
 
-httpServer.listen(port, hostname, () => {
-  console.log(`Server listening on ${hostname}:${port}`);
+
+httpServer.listen(port, () => {
+  console.log(`Server listening on ${port}`);
 });
