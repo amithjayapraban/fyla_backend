@@ -56,7 +56,7 @@ wsServer.on("request", (req) => {
   });
 });
 
-const endpoint = process.env.PORT || "8000";
+const endpoint = process.env.PORT || "8080";
 const splitted = endpoint.split(":");
 const port = splitted.pop();
 
