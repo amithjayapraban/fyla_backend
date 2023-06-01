@@ -55,7 +55,7 @@ wsServer.on("request", (req) => {
   conn.on("close", () => {
     delete clients[`${ip}`][`${id}%${device}`];
 
-    if (!Object.keys(clients[`${ip}`]).length) {
+    if (Object.keys(clients[`${ip}`]).length == 0) {
       delete clients[`${ip}`];
     } else {
       Object.values(clients[`${ip}`]).forEach((i) => {
@@ -74,7 +74,7 @@ wsServer.on("request", (req) => {
   Object.values(clients[`${ip}`]).forEach((i) => {
     i.send(JSON.stringify({ type: "peers", keys }));
   });
-  console.log(clients);
+  console.log(Object.keys(clients[ip]));
 });
 
 const endpoint = process.env.PORT || "8081";
