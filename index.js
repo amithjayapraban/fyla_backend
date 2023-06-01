@@ -78,7 +78,7 @@ wsServer.on("request", (req,socket) => {
   console.log(Object.keys(clients[ip]));
 });
 
-const endpoint = process.env.PORT || "8081";
+const endpoint = process.env.PORT || "8080";
 const splitted = endpoint.split(":");
 const port = splitted.pop();
 
