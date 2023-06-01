@@ -2,7 +2,7 @@ const http = require("http");
 const websocket = require("websocket");
 
 const clients = {};
-
+let ip;
 const httpServer = http.createServer((req, res) => {
   console.log(`${req.method.toUpperCase()} ${req.url}`);
 
@@ -19,8 +19,16 @@ const httpServer = http.createServer((req, res) => {
 
 const wsServer = new websocket.server({ httpServer });
 wsServer.on("request", (req) => {
-  console.log(`WS  ${req.resource}`);
-  console.log(Object.keys(clients));
+  console.log(`WS  ${JSON.stringify(req.resource)}`);
+  console.log(`WS  ${JSON.stringify(req.socket.remoteAddress)}`);
+
+  ip = req.socket.remoteAddress;
+
+  if (ip == "::1" || ip == "::ffff:127.0.0.1") {
+    ip = "127.0.0.1";
+  }
+  console.log("ip", ip);
+
   const { path } = req.resourceURL;
   const splitted = path.split("/");
   splitted.shift();
@@ -29,11 +37,11 @@ wsServer.on("request", (req) => {
   const conn = req.accept(null, req.origin);
   conn.on("message", (data) => {
     if (data.type === "utf8") {
-      console.log(`from ${id} << ${data.utf8Data}`);
+      // console.log(`from ${id} << ${data.utf8Data}`);
 
       const message = JSON.parse(data.utf8Data);
       const destId = message.id;
-      const dest = clients[destId];
+      const dest = clients[ip][destId];
       if (dest) {
         message.id = `${id}%${device}`;
         const data = JSON.stringify(message);
@@ -45,21 +53,33 @@ wsServer.on("request", (req) => {
     }
   });
   conn.on("close", () => {
-    delete clients[`${id}%${device}`]; 
+    delete clients[`${ip}`][`${id}%${device}`];
+
+    if (!Object.keys(clients[`${ip}`]).length) {
+      delete clients[`${ip}`];
+    } else {
+      Object.values(clients[`${ip}`]).forEach((i) => {
+        i.send(JSON.stringify({ type: "peers", keys }));
+      });
+    }
+
     console.error(`Client ${id} disconnected`);
   });
+  if (!clients[`${ip}`]) {
+    clients[`${ip}`] = {};
+  }
 
-  clients[`${id}%${device}`] = conn;
-  let keys = Object.keys(clients);
-  Object.values(clients).forEach((i) => {
+  clients[`${ip}`][`${id}%${device}`] = conn;
+  let keys = Object.keys(clients[`${ip}`]);
+  Object.values(clients[`${ip}`]).forEach((i) => {
     i.send(JSON.stringify({ type: "peers", keys }));
   });
+  console.log(clients);
 });
 
-const endpoint = process.env.PORT || "8080";
+const endpoint = process.env.PORT || "8081";
 const splitted = endpoint.split(":");
 const port = splitted.pop();
-
 
 httpServer.listen(port, () => {
   console.log(`Server listening on ${port}`);
