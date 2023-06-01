@@ -54,7 +54,7 @@ wsServer.on("request", (req,socket) => {
     }
   });
   conn.on("close", () => {
-    delete clients[`${ip}`][`${id}%${device}`];
+   ip && delete clients[`${ip}`][`${id}%${device}`];
 
     if (Object.keys(clients[`${ip}`]).length == 0) {
       delete clients[`${ip}`];
