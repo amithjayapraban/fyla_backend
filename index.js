@@ -18,11 +18,12 @@ const httpServer = http.createServer((req, res) => {
 });
 
 const wsServer = new websocket.server({ httpServer });
-wsServer.on("request", (req) => {
+wsServer.on("request", (req,socket) => {
+  console.log("sckt", req._peername.address);
   console.log(`WS  ${JSON.stringify(req.resource)}`);
-  console.log(`WS  ${JSON.stringify(req.socket.remoteAddress)}`);
+  // console.log(`WS  ${JSON.stringify(req.socket.remoteAddress)}`);
 
-  ip = req.socket.remoteAddress;
+  ip = req.remoteAddress;
 
   if (ip == "::1" || ip == "::ffff:127.0.0.1") {
     ip = "127.0.0.1";
@@ -77,7 +78,7 @@ wsServer.on("request", (req) => {
   console.log(Object.keys(clients[ip]));
 });
 
-const endpoint = process.env.PORT || "8080";
+const endpoint = process.env.PORT || "8081";
 const splitted = endpoint.split(":");
 const port = splitted.pop();
 
