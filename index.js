@@ -19,9 +19,9 @@ const httpServer = http.createServer((req, res) => {
 
 const wsServer = new websocket.server({ httpServer });
 wsServer.on("request", (req,socket) => {
-  console.log("sckt", req._peername.address);
+
   console.log(`WS  ${JSON.stringify(req.resource)}`);
-  // console.log(`WS  ${JSON.stringify(req.socket.remoteAddress)}`);
+  console.log(`Socket  ${JSON.stringify(req.remoteAddress)}`);
 
   ip = req.remoteAddress;
 
