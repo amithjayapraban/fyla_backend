@@ -18,8 +18,7 @@ const httpServer = http.createServer((req, res) => {
 });
 
 const wsServer = new websocket.server({ httpServer });
-wsServer.on("request", (req,socket) => {
-
+wsServer.on("request", (req, socket) => {
   console.log(`WS  ${JSON.stringify(req.resource)}`);
   console.log(`Socket  ${JSON.stringify(req.remoteAddress)}`);
 
@@ -54,16 +53,17 @@ wsServer.on("request", (req,socket) => {
     }
   });
   conn.on("close", () => {
-   ip && delete clients[`${ip}`][`${id}%${device}`];
+    delete clients[`${ip}`][`${id}%${device}`];
 
     if (Object.keys(clients[`${ip}`]).length == 0) {
       delete clients[`${ip}`];
+      console.log("rooom deleted");
     } else {
+      let keys = Object.keys(clients[ip]);
       Object.values(clients[`${ip}`]).forEach((i) => {
         i.send(JSON.stringify({ type: "peers", keys }));
       });
     }
-
     console.error(`Client ${id} disconnected`);
   });
   if (!clients[`${ip}`]) {
@@ -75,7 +75,7 @@ wsServer.on("request", (req,socket) => {
   Object.values(clients[`${ip}`]).forEach((i) => {
     i.send(JSON.stringify({ type: "peers", keys }));
   });
-  console.log(Object.keys(clients[ip]));
+  console.log(Object.keys(clients[ip]), "clients");
 });
 
 const endpoint = process.env.PORT || "8080";
