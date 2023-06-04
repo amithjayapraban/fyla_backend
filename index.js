@@ -21,13 +21,13 @@ const wsServer = new websocket.server({ httpServer });
 wsServer.on("request", (req, socket) => {
   console.log(`WS  ${JSON.stringify(req.resource)}`);
   console.log(`Socket  ${JSON.stringify(req.remoteAddress)}`);
-
-  ip = req.remoteAddress;
-
+  let ipparts = `${req.remoteAddress}`.split(":");
+  const first4Parts = ipparts.slice(0, 4);
+  ip = first4Parts.join(":");
+  console.log(first4Parts.join(":"));
   if (ip == "::1" || ip == "::ffff:127.0.0.1") {
     ip = "127.0.0.1";
   }
-  console.log("ip", ip);
 
   const { path } = req.resourceURL;
   const splitted = path.split("/");
