@@ -2,6 +2,7 @@
   "name": "p2p_backend",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js",
@@ -10,7 +11,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "websocket": "^1.0.34"
+    "validator": "^13.15.0",
+    "websocket": "^1.0.34",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
