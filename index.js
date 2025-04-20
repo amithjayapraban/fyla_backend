@@ -46,12 +46,13 @@ const wsServer = new server({ httpServer });
 wsServer.on("request", (req, socket) => {
   let ip = req.remoteAddress;
 
-  if (isIPv6(ip) && ip.startsWith("::ffff:")) {
-    ip = ip.split("::ffff:")[1]; // Convert IPv6-mapped IPv4 to IPv4
+  if (isIPv6(ip)) {
+    if (ip.startsWith("::ffff:"))
+      ip = ip.split("::ffff:")[1]; // Convert IPv6-mapped IPv4 to IPv4
+    else if (ip == "::1") ip = "127.0.0.1";
   }
-  else if (ip == "::1") ip = "127.0.0.1";
 
-  if (!isIPv4(ip)) {
+  if (!isIPv4(ip) && !isIPv6(ip)) {
     logger.error(`Invalid IP address: ${req.remoteAddress}`);
     req.reject();
     return;
