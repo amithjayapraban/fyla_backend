@@ -4,7 +4,7 @@ import { createLogger, transports } from "winston";
 import { isIPv4, isIPv6 } from "net";
 import validator from "validator";
 
-// Constants
+// constants
 const UPDATE_INTERVAL_MS = 1000;
 const INACTIVITY_TIMEOUT_MS = 60000; // 60 seconds
 
@@ -15,10 +15,10 @@ const logger = createLogger({
 
 const httpServer = createServer((req, res) => {
   const respond = (code, data, contentType = "text/plain") => {
-    const allowedOrigin = process.env.ALLOWED_ORIGIN || "*";
+    const allowedOrigins = (process.env.ALLOWED_ORIGINS || "*").split(",");
     res.writeHead(code, {
       "Content-Type": contentType,
-      "Access-Control-Allow-Origin": allowedOrigin,
+      "Access-Control-Allow-Origin": allowedOrigins,
     });
     res.end(data);
   };
@@ -49,9 +49,10 @@ wsServer.on("request", (req, socket) => {
   if (isIPv6(ip) && ip.startsWith("::ffff:")) {
     ip = ip.split("::ffff:")[1]; // Convert IPv6-mapped IPv4 to IPv4
   }
+  else if (ip == "::1") ip = "127.0.0.1";
 
   if (!isIPv4(ip)) {
-    logger.error("Invalid IP address");
+    logger.error(`Invalid IP address: ${req.remoteAddress}`);
     req.reject();
     return;
   }
@@ -100,7 +101,7 @@ wsServer.on("request", (req, socket) => {
         if (clients[ip] && destination) {
           message.id = `${id}%${device}`;
           const messageData = JSON.stringify(message);
-          logger.info(`sending to ${destinationId} >> ${messageData}`);
+          logger.info(`${id}%${device} -> sending to ${destinationId}`);
           destination.send(messageData);
         } else {
           logger.error(`Client ${destinationId} not found`);
@@ -110,23 +111,28 @@ wsServer.on("request", (req, socket) => {
           `Invalid message format from client ${id} at ${ip}:`,
           error
         );
-        return;
+        conn.close();
       }
     }
   });
 
   conn.on("close", () => {
-    delete clients[ip]?.[`${id}%${device}`];
-
-    if (clients[ip] && Object.keys(clients[ip]).length == 0) {
-      delete clients[ip];
-      pendingUpdates.delete(ip);
-      logger.info("room deleted");
-    } else {
-      pendingUpdates.add(ip);
+    try {
+      clearTimeout(inactivityTimeout);
+      delete clients[ip]?.[`${id}%${device}`];
+      if (clients[ip] && Object.keys(clients[ip]).length == 0) {
+        delete clients[ip];
+        pendingUpdates.delete(ip);
+        logger.info("room deleted");
+      } else {
+        pendingUpdates.add(ip);
+      }
+    } catch (err) {
+      logger.error("Error deleting client:", err);
     }
     logger.warn(`Client ${id} disconnected`);
   });
+
   if (!clients[ip]) {
     clients[ip] = {};
     logger.info(`New room created for IP ${ip}`);
@@ -146,10 +152,8 @@ wsServer.on("request", (req, socket) => {
   );
 });
 
-const port = parseInt(process.env.PORT, 10) || 8080;
+const port = Number(process.env.PORT) || 8080;
 
 httpServer.listen(port, () => {
   logger.info(`Server listening on port ${port}`);
 });
-
-
