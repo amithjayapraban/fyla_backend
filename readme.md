@@ -1,4 +1,8 @@
-## Limitations
+# 🔌 ip2p_backend
+
+A lightweight WebSocket-based signaling server that enables peer-to-peer communication using IP-based room separation.
+
+### Limitations
 
 - The `clients` object and `pendingUpdates` set are global, which may cause issues in a clustered or distributed environment.
 - State management across multiple instances is not supported natively. Consider using a data store like Redis for shared state.
