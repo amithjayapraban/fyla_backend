@@ -6,7 +6,7 @@ import validator from "validator";
 
 // constants
 const UPDATE_INTERVAL_MS = 1000;
-const INACTIVITY_TIMEOUT_MS = 60000; // 60 seconds
+const INACTIVITY_TIMEOUT_MS = 1000 * 60 * 5; // 5 minutes
 
 const logger = createLogger({
   level: process.env.LOG_LEVEL || "info",
