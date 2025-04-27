@@ -3,10 +3,13 @@ import { server } from "websocket";
 import { createLogger, transports } from "winston";
 import { isIPv4, isIPv6 } from "net";
 import validator from "validator";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // constants
 const UPDATE_INTERVAL_MS = 1000;
-const INACTIVITY_TIMEOUT_MS = 1000 * 60 * 5; // 5 minutes
+const INACTIVITY_TIMEOUT_MS = 1000 * 60 * 1; // 5 minutes
 
 const logger = createLogger({
   level: process.env.LOG_LEVEL || "info",
@@ -15,7 +18,7 @@ const logger = createLogger({
 
 const httpServer = createServer((req, res) => {
   const respond = (code, data, contentType = "text/plain") => {
-    const allowedOrigins = (process.env.ALLOWED_ORIGINS || "*").split(",");
+    const allowedOrigins = process.env.ALLOWED_ORIGINS.split(",");
     res.writeHead(code, {
       "Content-Type": contentType,
       "Access-Control-Allow-Origin": allowedOrigins,
@@ -45,7 +48,7 @@ const wsServer = new server({ httpServer });
 
 wsServer.on("request", (req, socket) => {
   let ip = req.remoteAddress;
-
+  console.log(process.env.ALLOWED_ORIGINS, "allowed");
   if (isIPv6(ip)) {
     if (ip.startsWith("::ffff:"))
       ip = ip.split("::ffff:")[1]; // Convert IPv6-mapped IPv4 to IPv4
@@ -54,7 +57,7 @@ wsServer.on("request", (req, socket) => {
 
   if (!isIPv4(ip) && !isIPv6(ip)) {
     logger.error(`Invalid IP address: ${req.remoteAddress}`);
-    req.reject();
+    req.reject(403, "Invalid client ID or device");
     return;
   }
   const { path } = req.resourceURL;
@@ -76,23 +79,20 @@ wsServer.on("request", (req, socket) => {
 
   const conn = req.accept(null, req.origin);
 
-  // To remove inactive clients
-  let inactivityTimeout = setTimeout(() => {
-    logger.warn(`Client ${id} at ${ip} timed out due to inactivity`);
-    conn.close(); // Close the connection if inactive
-  }, INACTIVITY_TIMEOUT_MS);
+  let inactivityTimeout;
 
-  // Reset the timeout on any activity
-  const resetTimeout = () => {
+  const setInactivityTimeout = () => {
     clearTimeout(inactivityTimeout);
     inactivityTimeout = setTimeout(() => {
       logger.warn(`Client ${id} at ${ip} timed out due to inactivity`);
       conn.close();
     }, INACTIVITY_TIMEOUT_MS);
   };
+  // Set the initial inactivity timeout
+  setInactivityTimeout();
 
   conn.on("message", (data) => {
-    resetTimeout(); // Reset timeout on receiving a message
+    setInactivityTimeout();
     if (data.type === "utf8") {
       try {
         const message = JSON.parse(data.utf8Data);
