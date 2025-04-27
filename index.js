@@ -48,7 +48,6 @@ const wsServer = new server({ httpServer });
 
 wsServer.on("request", (req, socket) => {
   let ip = req.remoteAddress;
-  console.log(process.env.ALLOWED_ORIGINS, "allowed");
   if (isIPv6(ip)) {
     if (ip.startsWith("::ffff:"))
       ip = ip.split("::ffff:")[1]; // Convert IPv6-mapped IPv4 to IPv4
@@ -153,7 +152,7 @@ wsServer.on("request", (req, socket) => {
   );
 });
 
-const port = Number(process.env.PORT) || 8080;
+const port = Number(process.env.PORT) || 8085;
 
 httpServer.listen(port, () => {
   logger.info(`Server listening on port ${port}`);
