@@ -18,10 +18,14 @@ const logger = createLogger({
 
 const httpServer = createServer((req, res) => {
   const respond = (code, data, contentType = "text/plain") => {
-    const allowedOrigins = process.env.ALLOWED_ORIGINS.split(",");
+    const allowedOrigins = (
+      process.env.ALLOWED_ORIGINS || "https://ip2p.vercel.app/"
+    ).split(",");
+    if (allowedOrigins.includes(req.headers.origin)) {
+      res.setHeader("Access-Control-Allow-Origin", req.headers.origin);
+    }
     res.writeHead(code, {
       "Content-Type": contentType,
-      "Access-Control-Allow-Origin": allowedOrigins,
     });
     res.end(data);
   };
