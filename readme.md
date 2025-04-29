@@ -1,7 +1,7 @@
-# 🔌 ip2p_backend
+# 🔌 fyla Backend
 A lightweight WebSocket-based signaling server that enables peer-to-peer communication using IP-based room separation.
  
-<a href="https://github.com/amithjayapraban/ip2p"  target="_blank">Frontend Repository</a>
+<a href="https://github.com/amithjayapraban/fyla"  target="_blank">Frontend Repository</a>
 ### Limitations
 
 - State management across multiple instances is not supported. Use a data store like Redis for shared state.
