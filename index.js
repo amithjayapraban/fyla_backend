@@ -19,7 +19,7 @@ const logger = createLogger({
 const httpServer = createServer((req, res) => {
   const respond = (code, data, contentType = "text/plain") => {
     const allowedOrigins = (
-      process.env.ALLOWED_ORIGINS || "https://ip2p.vercel.app/"
+      process.env.ALLOWED_ORIGINS || "https://fyla.vercel.app/"
     ).split(",");
     if (allowedOrigins.includes(req.headers.origin)) {
       res.setHeader("Access-Control-Allow-Origin", req.headers.origin);
